@@ -17,10 +17,10 @@ import { useConfirm } from '@/hooks/use-confirm';
 import { useWorkspaceId } from '@/hooks/use-workspace-id';
 import type { Id } from '@/mock/types';
 
-import { useCurrentMember } from '../api/use-current-member';
-import { useGetMember } from '../api/use-get-member';
-import { useRemoveMember } from '../api/use-remove-member';
-import { useUpdateMember } from '../api/use-update-member';
+import { useCurrentMember } from '@/features/members/api/use-current-member';
+import { useGetMember } from '@/features/members/api/use-get-member';
+import { useRemoveMember } from '@/features/members/api/use-remove-member';
+import { useUpdateMember } from '@/features/members/api/use-update-member';
 
 interface ProfileProps {
   memberId: Id<'members'>;
