@@ -44,13 +44,12 @@
 Here is the folder structure of this app.
 
 <!--- FOLDER_STRUCTURE_START --->
-
 ```bash
 slack-clone/
   |- public/
   |- src/
-    |-- mock/
     |-- app/
+      |--- api/
       |--- auth/
       |--- join/
       |--- workspace/
@@ -96,11 +95,18 @@ slack-clone/
       |--- use-workspace-id.ts
     |-- lib/
       |--- utils.ts
-    |-- middleware.ts
+    |-- mock/
+      |--- api.ts
+      |--- auth.ts
+      |--- hooks.ts
+      |--- messages.ts
+      |--- types.ts
+      |--- use-mock-mutation.ts
   |- .env.example
   |- .env/.env.local
   |- .eslintrc.json
   |- .gitignore
+  |- .npmrc
   |- .prettierrc.json
   |- .prettierrc.mjs
   |- bun.lockb
@@ -114,7 +120,6 @@ slack-clone/
   |- tsconfig.json
   |- vercel.ts
 ```
-
 <!--- FOLDER_STRUCTURE_END --->
 
 <br />
@@ -183,6 +188,7 @@ Useful resources and dependencies that are used in Slack Clone.
 - Thanks to CodeWithAntonio: https://codewithantonio.com/
 <!--- DEPENDENCIES_START --->
 - [@auth/core](https://www.npmjs.com/package/@auth/core): ^0.34.3
+- [@babel/core](https://www.npmjs.com/package/@babel/core): ^7.29.0
 - [@babel/eslint-parser](https://www.npmjs.com/package/@babel/eslint-parser): ^7.28.6
 - [@radix-ui/react-alert-dialog](https://www.npmjs.com/package/@radix-ui/react-alert-dialog): ^1.1.15
 - [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar): ^1.1.11
@@ -204,7 +210,7 @@ Useful resources and dependencies that are used in Slack Clone.
 - [date-fns](https://www.npmjs.com/package/date-fns): ^4.1.0
 - [emoji-picker-react](https://www.npmjs.com/package/emoji-picker-react): ^4.18.0
 - [eslint](https://www.npmjs.com/package/eslint): ^8
-- [eslint-config-next](https://www.npmjs.com/package/eslint-config-next): 14.2.8
+- [eslint-config-next](https://www.npmjs.com/package/eslint-config-next): 15.5.10
 - [eslint-config-prettier](https://www.npmjs.com/package/eslint-config-prettier): ^9.1.0
 - [eslint-plugin-prettier](https://www.npmjs.com/package/eslint-plugin-prettier): ^5.2.1
 - [jotai](https://www.npmjs.com/package/jotai): ^2.17.1
@@ -213,6 +219,7 @@ Useful resources and dependencies that are used in Slack Clone.
 - [next-themes](https://www.npmjs.com/package/next-themes): ^0.4.6
 - [nuqs](https://www.npmjs.com/package/nuqs): ^1.20.0
 - [postcss](https://www.npmjs.com/package/postcss): ^8.5.6
+- [prettier](https://www.npmjs.com/package/prettier): ^3.6.2
 - [prettier-plugin-tailwindcss](https://www.npmjs.com/package/prettier-plugin-tailwindcss): ^0.6.14
 - [quill](https://www.npmjs.com/package/quill): ^2.0.3
 - [react](https://www.npmjs.com/package/react): ^19.2.4
