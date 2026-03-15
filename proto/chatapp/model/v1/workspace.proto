@@ -9,6 +9,7 @@ import "chatapp/common/v1/metadata.proto";
 message Workspace {
   string id = 1;
   string name = 2;
-  string icon_url = 3;
-  chatapp.common.v1.AuditMetadata metadata = 4;
+  string slug = 3;
+  string icon_url = 4;
+  chatapp.common.v1.AuditMetadata metadata = 5;
 }
