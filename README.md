@@ -44,6 +44,7 @@
 Here is the folder structure of this app.
 
 <!--- FOLDER_STRUCTURE_START --->
+
 ```bash
 slack-clone/
   |- public/
@@ -120,6 +121,7 @@ slack-clone/
   |- tsconfig.json
   |- vercel.ts
 ```
+
 <!--- FOLDER_STRUCTURE_END --->
 
 <br />
