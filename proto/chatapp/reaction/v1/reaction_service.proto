@@ -6,6 +6,12 @@ option go_package = "github.com/AIon-Copilot/backend/gen/go/chatapp/reaction/v1;
 
 import "chatapp/model/v1/reaction.proto";
 
+message AddReactionRequest {
+  string message_id = 1;
+  string emoji_code = 2;
+}
+
+
 message AddReactionResponse {
   chatapp.model.v1.Reaction reaction = 1;
 }
