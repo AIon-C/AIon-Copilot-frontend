@@ -18,18 +18,18 @@ message AddReactionResponse {
 
 message RemoveReactionRequest {
   string message_id = 1;
-  string emogi_code = 2;
+  string emoji_code = 2;
 }
 
 message RemoveReactionResponse {
   string message_id = 1;
 }
 
-message ListReactionRequest {
+message ListReactionsRequest {
   string message_id = 1;
 }
 
-message ListReactionResponse {
+message ListReactionsResponse {
   repeated chatapp.model.v1.Reaction reactions = 1;
 }
 
