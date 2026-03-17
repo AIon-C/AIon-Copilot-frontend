@@ -27,7 +27,28 @@ type InMemoryThread = {
   messages: AiMessageDto[];
 };
 
-const inMemoryThreads = new Map<string, InMemoryThread>();
+const MAX_IN_MEMORY_THREADS = 1000;
+
+class BoundedThreadMap extends Map<string, InMemoryThread> {
+  private readonly maxSize: number;
+
+  constructor(maxSize: number) {
+    super();
+    this.maxSize = maxSize;
+  }
+
+  override set(key: string, value: InMemoryThread): this {
+    if (!this.has(key) && this.size >= this.maxSize) {
+      const firstKey = this.keys().next().value as string | undefined;
+      if (firstKey !== undefined) {
+        this.delete(firstKey);
+      }
+    }
+    return super.set(key, value);
+  }
+}
+
+const inMemoryThreads = new BoundedThreadMap(MAX_IN_MEMORY_THREADS);
 
 const STUB_ASSISTANT_REPLY = 'これはstub応答です。実APIが未稼働または利用不可のため、仕様書準拠の固定応答を返しています。';
 const MOCK_ASSISTANT_REPLY =
