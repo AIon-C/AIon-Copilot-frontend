@@ -149,10 +149,12 @@ const requestSse = async (path: string, payload: AiAskRequestDto): Promise<Copil
 
       for (const rawLine of lines) {
         const line = rawLine.trim();
-        if (!line.startsWith('data: ')) continue;
+        const dataPrefix = 'data:';
+        if (!line.startsWith(dataPrefix)) continue;
 
         try {
-          const event = JSON.parse(line.slice(6)) as { type?: string; content?: string; message?: string; messageId?: string };
+          const jsonText = line.slice(dataPrefix.length).trimStart();
+          const event = JSON.parse(jsonText) as { type?: string; content?: string; message?: string; messageId?: string };
 
           if (event.type === 'text-delta' && typeof event.content === 'string') {
             assistantContent += event.content;
