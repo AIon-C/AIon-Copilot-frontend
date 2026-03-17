@@ -62,7 +62,5 @@ const resolveCopilotTimeout = () => {
 
 export const copilotApiConfig = {
   mode: resolveCopilotMode(),
-  baseUrl: process.env.NEXT_PUBLIC_COPILOT_API_BASE_URL ?? '',
   timeoutMs: resolveCopilotTimeout(),
-  token: process.env.NEXT_PUBLIC_COPILOT_API_TOKEN ?? '',
 } as const;

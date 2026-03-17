@@ -77,24 +77,16 @@ const parseErrorMessage = async (response: Response) => {
 };
 
 const requestJson = async <T>(path: string, options: Omit<RequestInit, 'headers'> & { headers?: Record<string, string> }): Promise<T> => {
-  if (!copilotApiConfig.baseUrl) {
-    throw new CopilotApiError('Copilot API base URL is not configured.', 503);
-  }
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), parseTimeoutMs());
 
   try {
-    const token = copilotApiConfig.token;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
 
-    // TODO: JWT取得元を仕様確定後に差し替える（現状は環境変数のみ）。
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    const response = await fetch(`${copilotApiConfig.baseUrl}${path}`, {
+    const response = await fetch(`/api/copilot${path}`, {
       ...options,
       headers,
       signal: controller.signal,
@@ -122,23 +114,15 @@ const requestJson = async <T>(path: string, options: Omit<RequestInit, 'headers'
 };
 
 const requestSse = async (path: string, payload: AiAskRequestDto): Promise<CopilotCreateMessageResult> => {
-  if (!copilotApiConfig.baseUrl) {
-    throw new CopilotApiError('Copilot API base URL is not configured.', 503);
-  }
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), parseTimeoutMs());
 
   try {
-    const token = copilotApiConfig.token;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // TODO: JWT取得元を仕様確定後に差し替える（現状は環境変数のみ）。
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    const response = await fetch(`${copilotApiConfig.baseUrl}${path}`, {
+    const response = await fetch(`/api/copilot${path}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
