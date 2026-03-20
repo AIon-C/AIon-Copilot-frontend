@@ -22,8 +22,8 @@ import { useGetChannels } from '@/features/channels/api/use-get-channels';
 import { useGetMembers } from '@/features/user/api/use-get-members';
 import { useGetWorkspace } from '@/features/workspaces/api/use-get-workspace';
 import { usePanel } from '@/hooks/use-panel';
-import { useWorkspaceSidebarToggle } from '@/hooks/use-workspace-sidebar-toggle';
 import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import { useWorkspaceSidebarToggle } from '@/hooks/use-workspace-sidebar-toggle';
 import type { Id } from '@/mock/types';
 
 export const Toolbar = () => {
@@ -78,10 +78,7 @@ export const Toolbar = () => {
       }
 
       const target = e.target as HTMLElement | null;
-      const isEditableTarget =
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target?.isContentEditable;
+      const isEditableTarget = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
 
       if (isEditableTarget) {
         return;
@@ -113,10 +110,8 @@ export const Toolbar = () => {
         >
           <PanelLeft className="size-4" />
           Channels
-
           <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/30 px-1.5 font-mono text-[10px] font-medium text-white/90">
-            <span className="text-xs">Ctrl</span>
-            B
+            <span className="text-xs">Ctrl</span>B
           </kbd>
         </Button>
       </div>
@@ -135,11 +130,9 @@ export const Toolbar = () => {
           <Button variant="transparent" size="sm" onClick={onToggleAiChat} className="h-7 gap-1.5 text-white">
             <Bot className="size-4" />
             Copilot
-
             <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/30 px-1.5 font-mono text-[10px] font-medium text-white/90">
               <span className="text-xs">Ctrl</span>
-              <span className="text-xs">⇧</span>
-              B
+              <span className="text-xs">⇧</span>B
             </kbd>
           </Button>
         </div>
