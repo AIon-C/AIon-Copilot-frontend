@@ -49,12 +49,12 @@ const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
       <div className="flex h-[calc(100vh_-_40px)]">
         <Sidebar />
 
-        <ResizablePanelGroup direction="horizontal" autoSaveId="slack-clone-workspace-layout">
+        <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
             ref={workspaceSidebarPanelRef}
             collapsible
             collapsedSize={0}
-            defaultSize={DEFAULT_WORKSPACE_SIDEBAR_SIZE}
+            defaultSize={workspaceSidebarOpen ? DEFAULT_WORKSPACE_SIDEBAR_SIZE : 0}
             minSize={11}
             className="bg-[#5E2C5F]"
             onResize={(size) => {
