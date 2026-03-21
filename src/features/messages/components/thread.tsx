@@ -2,11 +2,13 @@ import { differenceInMinutes, format, isToday, isYesterday } from 'date-fns';
 import { AlertTriangle, Loader, XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type Quill from 'quill';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Message } from '@/components/message';
 import { Button } from '@/components/ui/button';
+import { ShinyText } from '@/components/ui/shiny-text';
+import { fileService } from '@/features/file/api/file-service';
 import { useGenerateUploadUrl } from '@/features/file/api/use-generate-upload-url';
 import { useCreateMessage } from '@/features/messages/api/use-create-message';
 import { useGetMessage } from '@/features/messages/api/use-get-message';
@@ -41,7 +43,7 @@ type CreateMessageValues = {
   workspaceId: Id<'workspaces'>;
   parentMessageId: Id<'messages'>;
   body: string;
-  image?: Id<'_storage'>;
+  image?: string;
 };
 
 interface ThreadProps {
@@ -58,15 +60,20 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
   const [isPending, setIsPending] = useState(false);
 
   const innerRef = useRef<Quill | null>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const prevResultsLengthRef = useRef(0);
+  const prevMessageIdRef = useRef<string | undefined>(undefined);
 
   const { data: currentMember } = useCurrentMember({ workspaceId });
   const { data: message, isLoading: isMessageLoading } = useGetMessage({ id: messageId });
+  const threadRootMessageId = (message?.parentMessageId as Id<'messages'> | undefined) ?? messageId;
 
   const { mutate: createMessage } = useCreateMessage();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
   const { results, status, loadMore } = useGetMessages({
     channelId,
-    parentMessageId: messageId,
+    parentMessageId: threadRootMessageId,
   });
 
   const canLoadMore = status === 'CanLoadMore';
@@ -80,39 +87,51 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
       const values: CreateMessageValues = {
         channelId,
         workspaceId,
-        parentMessageId: messageId,
+        parentMessageId: threadRootMessageId,
         body,
         image: undefined,
       };
 
       if (image) {
-        const url = await generateUploadUrl(
-          {},
+        const uploadSession = await generateUploadUrl(
+          {
+            workspaceId,
+            fileName: image.name,
+            contentType: image.type || 'application/octet-stream',
+            fileSize: image.size,
+          },
           {
             throwError: true,
           },
         );
 
-        if (!url) throw new Error('URL not found.');
+        if (!uploadSession) throw new Error('Upload session not found.');
 
-        const result = await fetch(url, {
+        const formData = new FormData();
+        formData.append('uploadUrl', uploadSession.uploadUrl);
+        formData.append('file', image);
+
+        const result = await fetch('/api/upload-proxy', {
           method: 'POST',
-          headers: { 'Content-type': image.type },
-          body: image,
+          body: formData,
         });
 
-        if (!result.ok) throw new Error('Failed to upload image.');
+        if (!result.ok) {
+          const payload = (await result.json().catch(() => null)) as { error?: string; detail?: string } | null;
+          throw new Error(payload?.detail || payload?.error || 'Failed to upload image.');
+        }
 
-        const { storageId } = await result.json();
+        await fileService.completeUpload({ fileId: uploadSession.fileId });
 
-        values.image = storageId;
+        values.image = uploadSession.fileId;
       }
 
       await createMessage(values, { throwError: true });
 
       setEditorKey((prevKey) => prevKey + 1);
     } catch (error) {
-      toast.error('Failed to send message.');
+      const message = error instanceof Error ? error.message : 'Failed to send message.';
+      toast.error(message);
     } finally {
       setIsPending(false);
       innerRef?.current?.enable(true);
@@ -128,18 +147,52 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
         groups[dateKey] = [];
       }
 
-      groups[dateKey].unshift(message);
+      groups[dateKey].push(message);
 
       return groups;
     },
     {} as Record<string, typeof results>,
   );
 
+  useEffect(() => {
+    if (status === 'LoadingFirstPage') {
+      return;
+    }
+
+    const currentLength = results?.length ?? 0;
+    const prevLength = prevResultsLengthRef.current;
+    const prevMessageId = prevMessageIdRef.current;
+    const currentMessageId = message?._id;
+
+    prevResultsLengthRef.current = currentLength;
+    prevMessageIdRef.current = currentMessageId;
+
+    const threadSwitched = currentMessageId !== prevMessageId;
+
+    if (!threadSwitched) {
+      if (currentLength <= prevLength) return;
+
+      const el = scrollContainerRef.current;
+      const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+      if (!nearBottom) return;
+    }
+
+    const rafId = window.requestAnimationFrame(() => {
+      bottomAnchorRef.current?.scrollIntoView({ block: 'end' });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [message?._id, results, status]);
+
   if (isMessageLoading || status === 'LoadingFirstPage') {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col bg-[#191919]">
         <div className="flex h-[49px] items-center justify-between border-b px-4">
-          <p className="text-lg font-bold">Thread</p>
+          <ShinyText className="text-lg font-bold" color="#cbd5e1" shineColor="#ffffff" speed={2.2} spread={115}>
+            Thread
+          </ShinyText>
 
           <Button onClick={onClose} size="iconSm" variant="ghost">
             <XIcon className="size-5 stroke-[1.5]" />
@@ -155,9 +208,11 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
 
   if (!message) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col bg-[#191919]">
         <div className="flex h-[49px] items-center justify-between border-b px-4">
-          <p className="text-lg font-bold">Thread</p>
+          <ShinyText className="text-lg font-bold" color="#cbd5e1" shineColor="#ffffff" speed={2.2} spread={115}>
+            Thread
+          </ShinyText>
 
           <Button onClick={onClose} size="iconSm" variant="ghost">
             <XIcon className="size-5 stroke-[1.5]" />
@@ -173,22 +228,40 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[#191919]">
       <div className="flex h-[49px] items-center justify-between border-b px-4">
-        <p className="text-lg font-bold">Thread</p>
+        <ShinyText className="text-lg font-bold" color="#cbd5e1" shineColor="#ffffff" speed={2.2} spread={115}>
+          Thread
+        </ShinyText>
 
         <Button onClick={onClose} size="iconSm" variant="ghost">
           <XIcon className="size-5 stroke-[1.5]" />
         </Button>
       </div>
 
-      <div className="messages-scrollbar flex flex-1 flex-col-reverse overflow-y-auto pb-4">
+      <div ref={scrollContainerRef} className="messages-scrollbar flex flex-1 flex-col justify-end overflow-y-auto pb-4">
+        <Message
+          hideThreadButton
+          memberId={message.memberId}
+          authorName={message.user.name}
+          authorImage={message.user.image}
+          isAuthor={message.memberId === currentMember?._id}
+          body={message.body}
+          image={message.image}
+          createdAt={message._creationTime}
+          updatedAt={message.updatedAt}
+          id={message._id}
+          reactions={message.reactions}
+          isEditing={editingId === message._id}
+          setEditingId={setEditingId}
+        />
+
         {Object.entries(groupedMessages || {}).map(([dateKey, messages]) => (
           <div key={dateKey}>
             <div className="relative my-2 text-center">
               <hr className="absolute left-0 right-0 top-1/2 border-t border-gray-300" />
 
-              <span className="relative inline-block rounded-full border border-gray-300 bg-white px-4 py-1 text-xs shadow-sm">
+              <span className="relative inline-block rounded-full border border-slate-600 bg-slate-900/90 px-4 py-1 text-xs shadow-sm">
                 {formatDateLabel(dateKey)}
               </span>
             </div>
@@ -249,27 +322,13 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
           <div className="relative my-2 text-center">
             <hr className="absolute left-0 right-0 top-1/2 border-t border-gray-300" />
 
-            <span className="relative inline-block rounded-full border border-gray-300 bg-white px-4 py-1 text-xs shadow-sm">
+            <span className="relative inline-block rounded-full border border-slate-600 bg-slate-900/90 px-4 py-1 text-xs shadow-sm">
               <Loader className="size-4 animate-spin" />
             </span>
           </div>
         )}
 
-        <Message
-          hideThreadButton
-          memberId={message.memberId}
-          authorName={message.user.name}
-          authorImage={message.user.image}
-          isAuthor={message.memberId === currentMember?._id}
-          body={message.body}
-          image={message.image}
-          createdAt={message._creationTime}
-          updatedAt={message.updatedAt}
-          id={message._id}
-          reactions={message.reactions}
-          isEditing={editingId === message._id}
-          setEditingId={setEditingId}
-        />
+        <div ref={bottomAnchorRef} />
       </div>
 
       <div className="px-4">

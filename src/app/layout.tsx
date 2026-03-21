@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 import { PropsWithChildren } from 'react';
 
-import { JotaiProvider } from '@/components/jotai-provider';
 import { ModalProvider } from '@/components/modal-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { siteConfig } from '@/config';
+import { AuthBootstrap } from '@/features/auth/components/auth-bootstrap';
+import { AuthBootstrapper } from '@/features/auth/components/auth-bootstrapper';
 
 import './globals.css';
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
 });
 
@@ -18,13 +19,13 @@ export const metadata: Metadata = siteConfig;
 const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>
-        <JotaiProvider>
-          <Toaster theme="light" richColors closeButton />
+      <body className={`${spaceGrotesk.className} antialiased`}>
+        <AuthBootstrap>
+          <AuthBootstrapper />
+          <Toaster theme="dark" richColors closeButton />
           <ModalProvider />
-
           {children}
-        </JotaiProvider>
+        </AuthBootstrap>
       </body>
     </html>
   );

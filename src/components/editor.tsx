@@ -21,6 +21,7 @@ type EditorValue = {
 interface EditorProps {
   onSubmit: ({ image, body }: EditorValue) => void;
   onCancel?: () => void;
+  onFocus?: () => void;
   placeholder?: string;
   defaultValue?: Delta | Op[];
   disabled?: boolean;
@@ -31,6 +32,7 @@ interface EditorProps {
 const Editor = ({
   onCancel,
   onSubmit,
+  onFocus,
   placeholder = 'Write something...',
   defaultValue = [],
   disabled = false,
@@ -50,8 +52,11 @@ const Editor = ({
   const defaultValueRef = useRef(defaultValue);
   const disabledRef = useRef(disabled);
 
+  const onFocusRef = useRef(onFocus);
+
   useLayoutEffect(() => {
     submitRef.current = onSubmit;
+    onFocusRef.current = onFocus;
     placeholderRef.current = placeholder;
     defaultValueRef.current = defaultValue;
     disabledRef.current = disabled;
@@ -113,19 +118,54 @@ const Editor = ({
     quill.setContents(defaultValueRef.current);
     setText(quill.getText());
 
-    quill.on(Quill.events.TEXT_CHANGE, () => {
+    const clearPlaceholder = () => {
+      const editorEl = quill.root;
+      if (editorEl.dataset.placeholder) {
+        editorEl.dataset.placeholder = '';
+      }
+    };
+
+    const handleTextChange = (_delta: unknown, _oldDelta: unknown, source: string) => {
       setText(quill.getText());
-    });
+      if (source === 'user') {
+        clearPlaceholder();
+        onFocusRef.current?.();
+      }
+    };
+
+    quill.on(Quill.events.TEXT_CHANGE, handleTextChange);
+
+    const handleRootFocusIn = () => {
+      clearPlaceholder();
+      onFocusRef.current?.();
+    };
+
+    const handleCompositionStart = () => {
+      clearPlaceholder();
+      onFocusRef.current?.();
+    };
+
+    quill.root.addEventListener('focusin', handleRootFocusIn);
+    quill.root.addEventListener('compositionstart', handleCompositionStart);
 
     return () => {
       if (container) container.innerHTML = '';
 
-      quill.off(Quill.events.TEXT_CHANGE);
+      quill.off(Quill.events.TEXT_CHANGE, handleTextChange);
 
       if (quillRef) quillRef.current = null;
       if (innerRef) innerRef.current = null;
+
+      quill.root.removeEventListener('focusin', handleRootFocusIn);
+      quill.root.removeEventListener('compositionstart', handleCompositionStart);
     };
   }, [innerRef]);
+
+  useEffect(() => {
+    if (!quillRef.current) return;
+    const editorEl = quillRef.current.root;
+    editorEl.dataset.placeholder = placeholder || '';
+  }, [placeholder]);
 
   const toggleToolbar = () => {
     setIsToolbarVisible((current) => !current);
@@ -153,7 +193,7 @@ const Editor = ({
 
       <div
         className={cn(
-          'flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition focus-within:border-slate-300 focus-within:shadow-sm',
+          'flex flex-col overflow-hidden rounded-md border border-slate-700 bg-slate-900/90 transition focus-within:border-slate-500 focus-within:shadow-sm',
           disabled && 'opacity-50',
         )}
       >
@@ -169,7 +209,7 @@ const Editor = ({
 
                     imageElementRef.current!.value = '';
                   }}
-                  className="absolute -right-2.5 -top-2.5 z-[4] hidden size-6 items-center justify-center rounded-full border-2 border-white bg-black/70 text-white hover:bg-black group-hover/image:flex"
+                  className="absolute -right-2.5 -top-2.5 z-[4] hidden size-6 items-center justify-center rounded-full border-2 border-slate-500 bg-slate-900/90 text-slate-100 hover:bg-slate-800 group-hover/image:flex"
                 >
                   <XIcon className="size-3.5" />
                 </button>
@@ -223,7 +263,7 @@ const Editor = ({
                   });
                 }}
                 size="sm"
-                className="bg-[#007a5a] text-white hover:bg-[#007a5a]/80"
+                className="bg-cyan-400 text-slate-900 hover:bg-cyan-300"
               >
                 Save
               </Button>
@@ -244,7 +284,7 @@ const Editor = ({
               }}
               className={cn(
                 'ml-auto',
-                isEmpty ? 'bg-white text-muted-foreground hover:bg-white/80' : 'bg-[#007a5a] text-white hover:bg-[#007a5a]/80',
+                isEmpty ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-cyan-400 text-slate-900 hover:bg-cyan-300',
               )}
               size="iconSm"
             >

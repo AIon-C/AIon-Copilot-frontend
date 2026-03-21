@@ -1,4 +1,4 @@
-import { MessageSquareText, Pencil, Smile, Trash } from 'lucide-react';
+import { Bot, MessageSquareText, Pencil, Smile, Trash } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +11,8 @@ interface ToolbarProps {
   handleEdit: () => void;
   handleDelete: () => void;
   handleThread: () => void;
+  handleCopilotContext: () => void;
+  isCopilotContextActive?: boolean;
   handleReaction: (value: string) => void;
   hideThreadButton?: boolean;
 }
@@ -21,12 +23,14 @@ export const Toolbar = ({
   handleEdit,
   handleDelete,
   handleThread,
+  handleCopilotContext,
+  isCopilotContextActive,
   handleReaction,
   hideThreadButton,
 }: ToolbarProps) => {
   return (
     <div className="absolute right-5 top-0">
-      <div className="rounded-md border bg-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+      <div className="rounded-md border border-slate-700 bg-slate-900/95 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
         <EmojiPopover hint="Add reaction" onEmojiSelect={handleReaction}>
           <Button variant="ghost" size="iconSm" disabled={isPending}>
             <Smile className="size-4" />
@@ -40,6 +44,18 @@ export const Toolbar = ({
             </Button>
           </Hint>
         )}
+
+        <Hint label={isCopilotContextActive ? 'Copilot context selected' : 'Use as Copilot context'}>
+          <Button
+            onClick={handleCopilotContext}
+            variant="ghost"
+            size="iconSm"
+            disabled={isPending}
+            className={isCopilotContextActive ? 'bg-cyan-400/15 text-cyan-200 hover:bg-cyan-400/20 hover:text-cyan-100' : undefined}
+          >
+            <Bot className="size-4" />
+          </Button>
+        </Hint>
 
         {isAuthor && (
           <Hint label="Edit message">
